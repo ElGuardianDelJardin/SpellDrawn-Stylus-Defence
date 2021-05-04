@@ -12,7 +12,7 @@
 #define NUMTHREADS 1
 #define STACKSIZE (4 * 1024)
 
-#define MAX_SPRITES   768
+#define MAX_SPRITES   50
 #define SCREEN_WIDTH  400
 #define SCREEN_HEIGHT 240
 
@@ -29,7 +29,8 @@ typedef struct
 
 static C2D_SpriteSheet spriteSheet;
 static Sprite sprites[MAX_SPRITES];
-static size_t numSprites = MAX_SPRITES/2;
+static Sprite icons[MAX_SPRITES / 2];
+static size_t numSprites = MAX_SPRITES;
 static int frame = 0;
 
 volatile bool runThreads = true;
@@ -48,10 +49,11 @@ static void initSprites() {
 	C2D_SpriteSetRotation(&sprite->spr, C3D_Angle(0));
 	sprite->dx = 0;
 	sprite->dy = 0;
-	sprite->initFrame = 1;
+	sprite->initFrame = 0;
 
-	for (size_t i = 1; i < MAX_SPRITES; i++)
+	for (size_t i = 2; i < MAX_SPRITES-1; i+=2)
 	{
+		//character sprite
 		sprite = &sprites[i];
 
 		sprite->initFrame = (8 + (rand() % 17) * 4);
@@ -65,6 +67,23 @@ static void initSprites() {
 		C2D_SpriteSetRotation(&sprite->spr, C3D_Angle(0));
 		sprite->dx = rand()*4.0f/RAND_MAX - 2.0f;
 		sprite->dy = rand()*4.0f/RAND_MAX - 2.0f;
+
+
+		//line icon
+		sprite = &sprites[i+1];
+
+		sprite->initFrame = (19 * 4 + (rand() % 4));
+
+		sprite->px = sprites[i].px;
+		sprite->py = sprites[i].py - 15;
+		// Random image, position, rotation and speed
+		C2D_SpriteFromSheet(&sprite->spr, spriteSheet, sprite->initFrame);
+		C2D_SpriteSetCenter(&sprite->spr, 0.5f, 0.5f);
+		C2D_SpriteSetPos(&sprite->spr, sprite->px, sprite->py);
+		C2D_SpriteSetRotation(&sprite->spr, C3D_Angle(0));
+		C2D_SpriteSetScale(&sprite->spr, 0.5f, 0.5f);
+		sprite->dx = 0;
+		sprite->dy = 0;
 		
 	}
 
@@ -76,8 +95,8 @@ static void moveSprites() {
 
 	Sprite* sprite = &sprites[0];
 
-		for (size_t i = 1; i < numSprites; i++)
-		{
+	for (size_t i = 2; i < MAX_SPRITES - 1; i +=2)
+	{
 			sprite = &sprites[i];
 
 			
@@ -100,7 +119,16 @@ static void moveSprites() {
 				(sprite->spr.params.pos.y > (SCREEN_HEIGHT - (sprite->spr.params.pos.h / 2.0f)) && sprite->dy > 0.0f))
 				sprite->dy = -sprite->dy;
 
-		}
+
+			sprite = &sprites[i+1];
+
+			sprite->px = sprites[i].px;
+			sprite->py = sprites[i].py - 15;
+
+			C2D_SpriteSetPos(&sprite->spr, sprite->px, sprite->py);
+
+	}
+
 
 }
 
@@ -114,7 +142,7 @@ void threadMain(void* arg)
 		C2D_SpriteSetPos(&sprite->spr, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
 		C2D_SpriteSetCenter(&sprite->spr, 0.5f, 0.5f);
 
-		for (size_t i = 1; i < numSprites; i++)
+		for (size_t i = 2; i < MAX_SPRITES; i += 2)
 		{
 			sprite = &sprites[i];
 
@@ -182,10 +210,7 @@ int main(int argc, char* argv[]) {
 			break; // break in order to return to hbmenu
 
 		u32 kHeld = hidKeysHeld();
-		if ((kHeld & KEY_UP) && numSprites < MAX_SPRITES)
-			numSprites++;
-		if ((kHeld & KEY_DOWN) && numSprites > 1)
-			numSprites--;
+		
 
 		moveSprites();
 

@@ -77,3 +77,7 @@
 #define sprites_zombie_run_anim_f1_idx 73
 #define sprites_zombie_run_anim_f2_idx 74
 #define sprites_zombie_run_anim_f3_idx 75
+#define sprites_LINE_idx 76
+#define sprites_ELE_idx 77
+#define sprites_Triangle_idx 78
+#define sprites_ZETA_idx 79
